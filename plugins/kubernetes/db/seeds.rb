@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'yaml'
+
 # example setup for docker-for-mac with kubernetes
 # running without validations it works even when docker is not running
 project = Project.create!(
@@ -12,11 +14,13 @@ groupk = DeployGroup.create!(
   environment: master
 )
 
+k8s_config_path = ENV['K8S_CONFIG_PATH'] || File.expand_path("~/.kube/config")
+k8s_context = File.exists?(k8s_config_path) ? YAML.load_file(k8s_config_path).fetch('current-context') : 'docker-for-desktop'
 cluster = Kubernetes::Cluster.new(
   name: "local",
   description: "setup via seeds",
-  config_filepath: File.expand_path("~/.kube/config"),
-  config_context: "docker-for-desktop"
+  config_filepath: k8s_config_path,
+  config_context: k8s_context
 )
 cluster.save!(validate: false)
 
